@@ -25,35 +25,60 @@ export class Chunk {
           const wx = x + this.cx * CHUNK_SIZE;
           const wy = y + this.cy * CHUNK_SIZE;
           const wz = z + this.cz * CHUNK_SIZE;
-          this.blocks[this.index(x, y, z)] =
-            TerrainGenerator.getBlock(wx, wy, wz);
+          this.blocks[this.index(x, y, z)] = TerrainGenerator.getBlock(wx, wy, wz);
         }
       }
     }
   }
 
   buildMesh() {
-    const geo = new THREE.BoxGeometry(1, 1, 1);
-    const mat = new THREE.MeshLambertMaterial({ color: 0x55aa55 });
-    const group = new THREE.Group();
+    // 1. Count visible blocks to initialize InstancedMesh
+    let count = 0;
+    for (let i = 0; i < this.blocks.length; i++) {
+      if (this.blocks[i] !== BLOCKS.AIR.id) count++;
+    }
+
+    if (count === 0) return new THREE.Group();
+
+    // 2. Create Instance Mesh
+    const geometry = new THREE.BoxGeometry(1, 1, 1);
+    const material = new THREE.MeshLambertMaterial({ color: 0xffffff }); // Color handles per-instance
+    const mesh = new THREE.InstancedMesh(geometry, material, count);
+    
+    // Helper to position instances
+    const dummy = new THREE.Object3D();
+    const color = new THREE.Color();
+    let i = 0;
 
     for (let x = 0; x < CHUNK_SIZE; x++) {
       for (let y = 0; y < CHUNK_SIZE; y++) {
         for (let z = 0; z < CHUNK_SIZE; z++) {
-          const id = this.blocks[this.index(x, y, z)];
-          if (id !== BLOCKS.AIR.id) {
-            const m = new THREE.Mesh(geo, mat);
-            m.position.set(
+          const blockId = this.blocks[this.index(x, y, z)];
+          
+          if (blockId !== BLOCKS.AIR.id) {
+            // Position
+            dummy.position.set(
               x + this.cx * CHUNK_SIZE,
               y + this.cy * CHUNK_SIZE,
               z + this.cz * CHUNK_SIZE
             );
-            group.add(m);
+            dummy.updateMatrix();
+            mesh.setMatrixAt(i, dummy.matrix);
+
+            // Color based on Block ID
+            if (blockId === BLOCKS.GRASS.id) color.setHex(0x55aa55);
+            else if (blockId === BLOCKS.DIRT.id) color.setHex(0x8b4513);
+            else if (blockId === BLOCKS.STONE.id) color.setHex(0x888888);
+            else color.setHex(0xff00ff); // Error pink
+
+            mesh.setColorAt(i, color);
+            i++;
           }
         }
       }
     }
-    this.mesh = group;
-    return group;
+
+    this.mesh = mesh;
+    return mesh;
   }
 }
