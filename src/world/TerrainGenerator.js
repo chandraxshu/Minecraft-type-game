@@ -3,7 +3,12 @@ import { BLOCKS } from './BlockRegistry.js';
 
 export class TerrainGenerator {
   static getBlock(x, y, z) {
-    const height = Math.floor(noise(x * 0.05, z * 0.05) * 10 + 10);
+    // Scale inputs down for wider hills
+    const n = noise(x * 0.1, z * 0.1); 
+    
+    // Map -1..1 to Height 4..12
+    const height = Math.floor((n + 1) * 4 + 4); 
+
     if (y > height) return BLOCKS.AIR.id;
     if (y === height) return BLOCKS.GRASS.id;
     if (y > height - 3) return BLOCKS.DIRT.id;
