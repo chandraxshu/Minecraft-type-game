@@ -8,7 +8,7 @@ import { Player } from '../entities/Player.js';
 export class Game {
   constructor() {
     this.renderer = new Renderer();
-    this.camera = new Camera(this.renderer.domElement);
+    this.camera = new Camera();
     this.input = new Input(this.renderer.domElement);
     this.world = new World();
 
@@ -17,6 +17,7 @@ export class Game {
       this.input,
       this.camera
     );
+
     this.loop = new Loop(this.update.bind(this), this.render.bind(this));
   }
 
