@@ -12,7 +12,11 @@ export class Game {
     this.input = new Input(this.renderer.domElement);
     this.world = new World();
 
-    this.player = new Player(this.input, this.camera);
+    this.player = new Player(
+      this.world.scene,
+      this.input,
+      this.camera
+    );
     this.loop = new Loop(this.update.bind(this), this.render.bind(this));
   }
 
